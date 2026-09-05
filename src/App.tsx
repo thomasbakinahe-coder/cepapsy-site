@@ -273,7 +273,7 @@ export default function App() {
             </div>
             
             <p className="text-xs text-stone-400 leading-relaxed max-w-sm">
-              Le Centre d’Écoute et d’Accompagnement Psychologique est conventionné sous le statut légal RDC de l'A.S.B.L. Action Commune (ACO-RDC) laïque et apolitique.
+              Le Centre d'Écoute et d'Accompagnement Psychologique est conventionné sous le statut légal RDC de l'A.S.B.L. Action Commune (ACO-RDC) laïque et apolitique.
             </p>
 
             <span className="text-xs text-stone-400 font-medium block">
@@ -309,15 +309,6 @@ export default function App() {
               <p className="flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-clay-600" />
                 Hotline Standard : {phoneApp}
-              </p>
-              <p className="flex items-center gap-1.5 font-mono">
-                📞 Autres : {phoneAlt1}
-              </p>
-              <p className="flex items-center gap-1.5 font-mono">
-                📞 Autres : {phoneAlt2}
-              </p>
-              <p className="flex items-center gap-1.5 font-mono">
-                📞 Autres : {phoneAlt3}
               </p>
               <p className="flex items-center gap-2">
                 📧 Collège Clinique : {emailApp}
