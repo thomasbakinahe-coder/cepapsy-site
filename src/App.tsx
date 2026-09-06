@@ -14,11 +14,13 @@ import AboutSection from "./components/AboutSection";
 import VolunteerSection from "./components/VolunteerSection";
 import BookingForm from "./components/BookingForm";
 import TestimonialsSection from "./components/TestimonialsSection";
+import NewsSection from "./components/NewsSection";
 import { CEPAPSY_INFO } from "./data";
-import { EpaPsyLogo, AcoRdcLogo } from "./components/Logos";
+import { EpaPsyLogo } from "./components/Logos";
 import { useData } from "./lib/DataContext";
 import AdminPanel from "./components/AdminPanel";
 import PatientPortal from "./components/PatientPortal";
+import photoConsultation from "../assets/photo-consultation.jpg";
 
 export default function App() {
   const [activeSection, setActiveSection] = useState("hero");
@@ -37,8 +39,6 @@ export default function App() {
 
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
-    
-    // Resolve matching ID
     let targetId = `${sectionId}-section`;
     const element = document.getElementById(targetId);
     if (element) {
@@ -46,29 +46,24 @@ export default function App() {
     }
   };
 
-  // Pre-fill action triggered by Flowchart results
   const handleSelectBookingFromResult = (serviceName: string) => {
     setPrefilledService(serviceName);
     handleNavigate("booking");
   };
 
-  // Pre-fill action triggered by Services Card clicks
   const handleSelectBookingFromService = (serviceTitle: string) => {
     setPrefilledService(serviceTitle);
     handleNavigate("booking");
   };
 
-  // Route to volunteer form directly
   const handleSelectVolunteer = () => {
     handleNavigate("volunteer");
   };
 
-  // Monitor scroll movements to flag the navbar active link dynamically
   useEffect(() => {
     const handleScroll = () => {
       const sections = ["hero", "flowchart", "services", "faq", "about", "temoignages", "volunteer", "booking"];
       const scrollPos = window.scrollY + 200;
-
       for (const section of sections) {
         const el = document.getElementById(`${section}-section`);
         if (el) {
@@ -81,7 +76,6 @@ export default function App() {
         }
       }
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -104,8 +98,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-custom-50 select-none">
-      
-      {/* Navigation Header */}
+
       <Header
         onNavigate={handleNavigate}
         activeSection={activeSection}
@@ -114,18 +107,15 @@ export default function App() {
         onOpenPatient={() => setIsPatientOpen(true)}
       />
 
-      {/* Main Container */}
       <main className="flex-1 space-y-20 pb-20">
 
-        {/* 1. Hero Block with therapeutic typography - Cozy Warm ambiance */}
-        <section 
-          id="hero-section" 
+        <section
+          id="hero-section"
           className="relative min-h-[85vh] flex items-center justify-center px-4 overflow-hidden py-12 md:py-20"
         >
-          {/* Soothing visual backgrounds */}
           <div className="absolute inset-0 bg-radial from-emerald-custom-50/70 via-stone-custom-50 to-stone-custom-50 -z-10"></div>
           <div className="absolute top-1/4 left-10 w-96 h-96 rounded-full bg-clay-100/40 blur-3xl -z-10"></div>
-          
+
           <div className="max-w-5xl mx-auto text-center space-y-8 relative">
             <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold tracking-widest text-emerald-custom-700 uppercase bg-emerald-custom-100 px-3.5 py-1.5 rounded-full shadow-inner animate-fadeIn">
               <Sparkles className="w-3.5 h-3.5 text-clay-605" />
@@ -137,11 +127,14 @@ export default function App() {
               <span className="text-emerald-custom-700 italic font-normal">Reconstruire la paix intérieure.</span>
             </h1>
 
+            <button onClick={() => handleNavigate("booking")} className="cursor-pointer block mx-auto">
+              <img src={photoConsultation} alt="Consultation psychologique" className="rounded-2xl shadow-lg max-w-md mx-auto mt-8 hover:opacity-90 transition-opacity" />
+            </button>
+
             <p className="text-sm sm:text-base md:text-lg text-stone-custom-850 leading-relaxed max-w-2xl mx-auto">
               Le <strong>Centre d'Écoute et d'Accompagnement Psychologique (CEPAPSY - ACO RDC)</strong> offre des thérapies novatrices, des interventions post-traumatiques d'urgence et un soutien d'écoute actif structuré. Basé à Goma, ouvert à tous.
             </p>
 
-            {/* Micro Call-to-actions */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 max-w-md mx-auto">
               <button
                 onClick={() => handleNavigate("flowchart")}
@@ -159,7 +152,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Quick stats highlights */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-4 md:gap-6 max-w-4xl mx-auto pt-10 md:pt-16 border-t border-stone-custom-200">
               <div className="text-center px-2">
                 <span className="block text-2xl sm:text-3xl font-extrabold text-emerald-custom-700 serif-title">100%</span>
@@ -179,7 +171,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Arrow down anchors */}
             <button
               onClick={() => handleNavigate("flowchart")}
               className="animate-bounce inline-flex items-center justify-center p-2 rounded-full border border-stone-custom-200 text-stone-custom-800 hover:text-emerald-custom-600 hover:border-emerald-custom-200 transition-all mt-6 cursor-pointer"
@@ -193,7 +184,6 @@ export default function App() {
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
 
-        {/* 2. Flowchart Interactive Questionnaire - Finding therapist */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <Flowchart
             onSelectBooking={handleSelectBookingFromResult}
@@ -203,7 +193,6 @@ export default function App() {
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
 
-        {/* 3. Services Section with Expandable Grid details */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <ServicesSection
             onSelectService={handleSelectBookingFromService}
@@ -212,35 +201,33 @@ export default function App() {
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
 
-        {/* 3.5 Foire Aux Questions (Accordion structure) */}
         <div>
           <FaqSection />
         </div>
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
 
-        {/* 4. About & Mission Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <AboutSection />
         </div>
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
 
-        {/* 4.5 Témoignages / Patient Feedbacks (Professional Credibility Carousel) */}
         <div>
           <TestimonialsSection />
         </div>
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
+                <NewsSection />
 
-        {/* 5. Volunteer Psychologists Recruitment Campaign with form validators */}
+        <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <VolunteerSection />
         </div>
 
         <hr className="max-w-7xl mx-auto border-stone-custom-200/50" />
 
-        {/* 6. Contact and Booking Register Form with local DB persistence */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <BookingForm
             prefilledCategory={prefilledService}
@@ -249,29 +236,23 @@ export default function App() {
         </div>
 
       </main>
+            <footer className="bg-stone-custom-900 text-stone-300 py-16 px-4 border-t border-emerald-custom-800 relative select-none">
 
-      {/* 7. Professional High-contrast Footer with correct brochure coordinates */}
-      <footer className="bg-stone-custom-900 text-stone-300 py-16 px-4 border-t border-emerald-custom-800 relative select-none">
-        
-        {/* Absolute subtle glowing aura in the background */}
         <div className="absolute bottom-0 left-1/2 w-96 h-96 rounded-full bg-emerald-custom-600/10 blur-3xl -ml-48"></div>
-        
+
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 relative">
-          
-          {/* Organization logo credits */}
+
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 shrink-0 bg-white p-1 rounded-xl shadow-inner border border-stone-custom-800">
                 <EpaPsyLogo size={34} className="h-8 w-auto" />
-                <div className="w-[1px] h-5 bg-stone-custom-200"></div>
-                <AcoRdcLogo size={34} className="h-8 w-auto" />
               </div>
               <div>
                 <h4 className="font-bold text-white text-lg font-sans">CEPAPSY</h4>
                 <span className="text-[10px] text-stone-400 font-mono tracking-wider">RECHERCHE • FORMATION • INTERVENTION</span>
               </div>
             </div>
-            
+
             <p className="text-xs text-stone-400 leading-relaxed max-w-sm">
               Le Centre d'Écoute et d'Accompagnement Psychologique est conventionné sous le statut légal RDC de l'A.S.B.L. Action Commune (ACO-RDC) laïque et apolitique.
             </p>
@@ -281,7 +262,6 @@ export default function App() {
             </span>
           </div>
 
-          {/* Quick linkages helpful */}
           <div className="md:col-span-4 space-y-4">
             <h4 className="font-bold text-white text-sm uppercase tracking-wider font-mono">Bureaux d'Attribution</h4>
             <div className="space-y-3.5 text-xs text-stone-400">
@@ -302,7 +282,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Contact Direct */}
           <div className="md:col-span-4 space-y-4">
             <h4 className="font-bold text-white text-sm uppercase tracking-wider font-mono">Prise de contact Directe</h4>
             <div className="space-y-3 text-xs text-stone-400">
@@ -321,7 +300,6 @@ export default function App() {
 
         </div>
 
-        {/* copyright and legal warnings */}
         <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/10 text-center flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-stone-500">
           <p>
             © {new Date().getFullYear()} CEPAPSY RDC. Tous droits réservés. Association sans but lucratif ACO-RDC.
@@ -337,7 +315,6 @@ export default function App() {
 
       </footer>
 
-      {/* Crisis Warning Modal controller */}
       <CrisisModal
         isOpen={isCrisisOpen}
         onClose={() => setIsCrisisOpen(false)}

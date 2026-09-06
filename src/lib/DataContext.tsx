@@ -13,7 +13,7 @@ import {
   orderBy 
 } from "firebase/firestore";
 import { CEPAPSY_INFO, SERVICES_LIST, TESTIMONIALS_LIST } from "../data";
-import { ServiceItem, Testimonial } from "../types";
+import { ServiceItem, Testimonial, NewsItem } from "../types";
 
 export interface FaqItem {
   id: string;
@@ -52,6 +52,7 @@ export interface FirestoreVolunteer {
 interface DataContextProps {
   cepapsyInfo: typeof CEPAPSY_INFO;
   services: ServiceItem[];
+    news: NewsItem[];
   faqs: FaqItem[];
   testimonials: Testimonial[];
   appointments: FirestoreBooking[];
@@ -67,6 +68,8 @@ interface DataContextProps {
   deleteFaq: (id: string) => Promise<void>;
   saveTestimonial: (testi: Testimonial) => Promise<void>;
   deleteTestimonial: (id: string) => Promise<void>;
+    saveNews: (news: NewsItem) => Promise<void>;
+  deleteNews: (id: string) => Promise<void>;
   
   // Form submission actions
   submitBooking: (booking: Omit<FirestoreBooking, "status" | "createdAt">) => Promise<void>;
@@ -129,6 +132,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+    const [news, setNews] = useState<NewsItem[]>([]);
   const [appointments, setAppointments] = useState<FirestoreBooking[]>([]);
   const [volunteers, setVolunteers] = useState<FirestoreVolunteer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,6 +214,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.warn("Could not load testimonials from Firestore, using offline fallback:", err);
       setTestimonials(TESTIMONIALS_LIST);
+    }
+
+        // 4.5 Load News
+    try {
+      const newsSnapshot = await getDocs(collection(db, "news"));
+      if (!newsSnapshot.empty) {
+        const newsList: NewsItem[] = [];
+        newsSnapshot.forEach((doc) => {
+          newsList.push({ id: doc.id, ...doc.data() } as NewsItem);
+        });
+        newsList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setNews(newsList);
+      } else {
+        setNews([]);
+      }
+    } catch (err) {
+      console.warn("Could not load news from Firestore:", err);
+      setNews([]);
     }
 
     // Check if seeded based on services snapshot
@@ -414,6 +436,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  
+  const saveNews = async (newsItem: NewsItem) => {
+    try {
+      await setDoc(doc(db, "news", newsItem.id), {
+        title: newsItem.title,
+        description: newsItem.description,
+        imageUrl: newsItem.imageUrl,
+        date: newsItem.date
+      });
+      await refreshAllData();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  const deleteNews = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "news", id));
+      await refreshAllData();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
   // Forms Submissions (Appointments & Volunteers)
   const submitBooking = async (booking: Omit<FirestoreBooking, "status" | "createdAt">) => {
     try {
@@ -509,6 +557,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       deleteFaq,
       saveTestimonial,
       deleteTestimonial,
+            news,
+      saveNews,
+      deleteNews,
       submitBooking,
       submitVolunteer,
       updateBookingStatus,

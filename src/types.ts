@@ -66,3 +66,10 @@ export interface Testimonial {
   rating?: number; // e.g., 5-star professional rating
 }
 
+export interface NewsItem {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  date: string;
+}

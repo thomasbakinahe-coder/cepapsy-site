@@ -6,6 +6,7 @@
 import React from "react";
 import { CEPAPSY_INFO, TEAM_MEMBERS } from "../data";
 import { CheckCircle2, HeartHandshake, Award, Quote, Users, MapPin, Eye, Compass } from "lucide-react";
+import photoSoutien from "../../assets/photo-soutien.jpg";
 
 export default function AboutSection() {
   return (
@@ -78,6 +79,9 @@ export default function AboutSection() {
             </div>
           </div>
         </div>
+      </div>
+            <div className="max-w-4xl mx-auto">
+        <img src={photoSoutien} alt="Soutien psychologique" className="rounded-2xl shadow-lg w-full" />
       </div>
 
       {/* Vision & Mission Row */}

@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { Phone, Mail, MapPin, Menu, X, AlertTriangle, ShieldCheck, Lock, User } from "lucide-react";
 import { CEPAPSY_INFO } from "../data";
-import { EpaPsyLogo, AcoRdcLogo } from "./Logos";
+import { EpaPsyLogo } from "./Logos";
 import { useData } from "../lib/DataContext";
 
 interface HeaderProps {
@@ -42,7 +42,6 @@ export default function Header({ onNavigate, activeSection, onOpenCrisis, onOpen
 
   return (
     <header className="w-full relative z-40 bg-stone-custom-50 shadow-xs border-b border-stone-custom-200">
-      {/* Top emergency & Quick Contact bar */}
       <div className="bg-emerald-custom-600 text-stone-custom-50 text-[11px] sm:text-xs py-2 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2.5">
           <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 text-center md:text-left">
@@ -70,7 +69,6 @@ export default function Header({ onNavigate, activeSection, onOpenCrisis, onOpen
         </div>
       </div>
 
-      {/* Main Crisis Banner Link */}
       <div className="bg-clay-100 border-b border-clay-200 py-3 px-4 text-clay-650 text-xs sm:text-sm">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-2 text-center sm:text-left">
@@ -89,23 +87,16 @@ export default function Header({ onNavigate, activeSection, onOpenCrisis, onOpen
         </div>
       </div>
 
-      {/* Main clean navigation hierarchy */}
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        {/* Brand Group */}
         <div className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none" onClick={() => handleLinkClick("hero")}>
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 bg-white p-1 rounded-xl shadow-xs border border-stone-custom-200">
             <EpaPsyLogo size={34} className="h-8 sm:h-9 w-auto" />
-            <div className="w-[1px] h-5 sm:h-6 bg-stone-custom-150"></div>
-            <AcoRdcLogo size={34} className="h-8 sm:h-9 w-auto" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-emerald-custom-700 leading-none">
                 CEPAPSY
               </h1>
-              <span className="text-[8px] sm:text-[10px] bg-clay-100 text-clay-600 font-bold px-1.5 py-0.5 rounded uppercase font-mono tracking-wider">
-                ACO-RDC
-              </span>
             </div>
             <p className="text-[9px] sm:text-[10px] text-stone-custom-800 tracking-wide mt-0.5 uppercase max-w-[160px] xs:max-w-[200px] sm:max-w-[280px] md:max-w-none truncate">
               Centre d'Écoute & d'Accompagnement Psychologique
@@ -113,7 +104,6 @@ export default function Header({ onNavigate, activeSection, onOpenCrisis, onOpen
           </div>
         </div>
 
-        {/* Desktop nav links */}
         <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => {
             const isActive = activeSection === link.id;
@@ -162,7 +152,6 @@ export default function Header({ onNavigate, activeSection, onOpenCrisis, onOpen
           </button>
         </nav>
 
-        {/* Mobile menu Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="lg:hidden p-2 rounded-lg hover:bg-stone-custom-150 text-stone-custom-800 transition-colors"
@@ -173,7 +162,6 @@ export default function Header({ onNavigate, activeSection, onOpenCrisis, onOpen
         </button>
       </div>
 
-      {/* Mobile drawer with overlay */}
       {isOpen && (
         <div className="lg:hidden absolute top-full left-0 w-full bg-stone-custom-50 border-b border-stone-custom-200 shadow-xl py-4 px-4 flex flex-col gap-2 z-50 animate-fadeIn">
           {navLinks.map((link) => {

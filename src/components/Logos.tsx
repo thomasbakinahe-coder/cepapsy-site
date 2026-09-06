@@ -1,5 +1,5 @@
 import React from "react";
-
+import logoCepapsy from "../../assets/logo-cepapsy.png";
 interface LogoProps {
   className?: string;
   size?: number | string;
@@ -7,55 +7,12 @@ interface LogoProps {
 
 export const EpaPsyLogo: React.FC<LogoProps> = ({ className = "", size = "100%" }) => {
   return (
-    <svg
-      viewBox="0 0 350 250"
-      className={className}
-      style={{ width: size, height: "auto" }}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="Logo EPA PSY"
-    >
-      {/* Background container or group */}
-      <g>
-        {/* Curved dynamic swooshes - red and blue orbits */}
-        {/* Outer blue-teal swoosh */}
-        <path
-          d="M 60,110 C 15,200 130,240 280,210 C 290,205 292,198 285,198 C 170,225 70,185 85,112 C 95,65 170,25 280,75 C 285,78 288,72 280,68 C 150,15 80,55 60,110 Z"
-          fill="#046399"
-        />
-        {/* Inner red swoosh */}
-        <path
-          d="M 68,110 C 50,180 140,215 275,195 C 280,192 278,188 270,189 C 160,205 85,175 95,112 C 102,68 165,35 255,73 C 262,75 264,70 255,67 C 155,25 90,55 68,110 Z"
-          fill="#FF0F0F"
-        />
-
-        {/* Text Area */}
-        {/* "EPA" text */}
-        <text
-          x="190"
-          y="65"
-          fontFamily="system-ui, -apple-system, sans-serif"
-          fontWeight="bold"
-          fontSize="68px"
-          fill="#000000"
-          letterSpacing="4"
-        >
-          EPA
-        </text>
-
-        {/* "PSY" text */}
-        <text
-          x="80"
-          y="180"
-          fontFamily="system-ui, -apple-system, sans-serif"
-          fontWeight="900"
-          fontSize="115px"
-          fill="#046399"
-          letterSpacing="-1"
-        >
-          PSY
-        </text>
-      </g>
-    </svg>
+    <img
+  src={logoCepapsy}
+  alt="Logo Cepapsy"
+  className={className}
+  style={{ width: size, height: "auto" }}
+/>
   );
 };
 

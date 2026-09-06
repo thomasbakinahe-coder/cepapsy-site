@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAdmin } from "../lib/AdminContext";
 import { useData, FaqItem } from "../lib/DataContext";
-import { ServiceItem, Testimonial } from "../types";
+import { ServiceItem, Testimonial, NewsItem } from "../types";
 import { 
   Lock, 
   Mail, 
@@ -54,12 +54,17 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     updateVolunteerStatus,
     deleteBooking,
     deleteVolunteer,
-    seedDatabase,
-    refreshAllData
+       seedDatabase,
+    refreshAllData,
+    news,
+    saveNews,
+    deleteNews
   } = useData();
 
   // Navigation tabs in backend
-  const [activeTab, setActiveTab] = useState<"general" | "services" | "faq" | "testimonials" | "appointments" | "volunteers" | "clinical_records">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "services" | "faq" | "testimonials" | "appointments" | "volunteers" | "clinical_records" | "news">("general");
+  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [newNews, setNewNews] = useState<Partial<NewsItem>>({ id: "", title: "", description: "", imageUrl: "", date: new Date().toISOString().split("T")[0] });
 
   // Clinical records states
   const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
@@ -346,6 +351,33 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     try {
       await deleteTestimonial(id);
       setStatusMessage({ type: "success", text: "Témoignage patient supprimé." });
+    } catch (err: any) {
+      setStatusMessage({ type: "error", text: "Erreur: " + err.message });
+    }
+  };
+
+  
+  const handleNewsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    try {
+      const dataToSave = editingNews || { ...newNews, id: newNews.id || "news-" + Date.now() } as NewsItem;
+      await saveNews(dataToSave);
+      setNewNews({ id: "", title: "", description: "", imageUrl: "", date: new Date().toISOString().split("T")[0] });
+      setEditingNews(null);
+      setStatusMessage({ type: "success", text: "Actualité publiée avec succès !" });
+    } catch (err: any) {
+      setStatusMessage({ type: "error", text: "Erreur: " + err.message });
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDeleteNews = async (id: string) => {
+    if (!confirm("Supprimer cette actualité ?")) return;
+    try {
+      await deleteNews(id);
+      setStatusMessage({ type: "success", text: "Actualité supprimée." });
     } catch (err: any) {
       setStatusMessage({ type: "error", text: "Erreur: " + err.message });
     }
@@ -1420,6 +1452,137 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                             Anonymat Garanti
                           </span>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+                            {/* NEWS / FIELD ACTIVITIES MANAGEMENT */}
+              {activeTab === "news" && (
+                <div className="space-y-8">
+                  <div className="border-b pb-4 flex justify-between items-center flex-wrap gap-4">
+                    <div>
+                      <h3 className="font-extrabold text-stone-custom-900 text-lg sm:text-xl">
+                        Actualités & Travaux de Terrain
+                      </h3>
+                      <p className="text-xs text-stone-custom-800 mt-1">
+                        Publiez des photos et comptes-rendus de vos interventions pour renforcer votre visibilité auprès du public.
+                      </p>
+                    </div>
+                    {!editingNews && (
+                      <button
+                        onClick={() => {
+                          setEditingNews(null);
+                          setNewNews({ id: "news-" + Date.now(), title: "", description: "", imageUrl: "", date: new Date().toISOString().split("T")[0] });
+                        }}
+                        className="flex items-center gap-1.5 bg-emerald-custom-700 hover:bg-emerald-custom-800 text-white font-bold text-xs py-2 px-3 rounded-lg cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Nouvelle Actualité
+                      </button>
+                    )}
+                  </div>
+
+                  {(editingNews || newNews.title !== undefined) && (
+                    <div className="bg-white rounded-2xl border border-stone-custom-200 p-5 space-y-4">
+                      <div className="flex justify-between items-center border-b pb-3">
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-custom-700 flex items-center gap-1">
+                          <Edit2 className="w-3.5 h-3.5" />
+                          {editingNews ? "Modifier :" : "Créer :"} {editingNews?.title || "Nouvelle actualité"}
+                        </span>
+                        <button onClick={() => { setEditingNews(null); setNewNews({}); }} className="p-1 rounded-md text-stone-400 hover:text-stone-700">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleNewsSubmit} className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-stone-custom-800 block">Titre</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="Ex: Formation des bénévoles à Kasika"
+                            value={editingNews ? editingNews.title : newNews.title}
+                            onChange={(e) => editingNews 
+                              ? setEditingNews({ ...editingNews, title: e.target.value })
+                              : setNewNews({ ...newNews, title: e.target.value })
+                            }
+                            className="w-full bg-stone-custom-50 border border-stone-custom-200 rounded-lg p-2.5 text-xs text-stone-custom-900 outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-stone-custom-800 block">Lien de la photo (ex: depuis imgbb.com)</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="https://..."
+                            value={editingNews ? editingNews.imageUrl : newNews.imageUrl}
+                            onChange={(e) => editingNews 
+                              ? setEditingNews({ ...editingNews, imageUrl: e.target.value })
+                              : setNewNews({ ...newNews, imageUrl: e.target.value })
+                            }
+                            className="w-full bg-stone-custom-50 border border-stone-custom-200 rounded-lg p-2.5 text-xs text-stone-custom-900 outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-stone-custom-800 block">Date</label>
+                          <input 
+                            type="date"
+                            required
+                            value={editingNews ? editingNews.date : newNews.date}
+                            onChange={(e) => editingNews 
+                              ? setEditingNews({ ...editingNews, date: e.target.value })
+                              : setNewNews({ ...newNews, date: e.target.value })
+                            }
+                            className="w-full bg-stone-custom-50 border border-stone-custom-200 rounded-lg p-2.5 text-xs text-stone-custom-900 outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-stone-custom-800 block">Description</label>
+                          <textarea 
+                            required
+                            rows={3}
+                            value={editingNews ? editingNews.description : newNews.description}
+                            onChange={(e) => editingNews 
+                              ? setEditingNews({ ...editingNews, description: e.target.value })
+                              : setNewNews({ ...newNews, description: e.target.value })
+                            }
+                            className="w-full bg-stone-custom-50 border border-stone-custom-200 rounded-lg p-2.5 text-xs text-stone-custom-900 outline-none leading-relaxed"
+                          />
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button type="submit" className="bg-emerald-custom-700 hover:bg-emerald-custom-800 text-white text-xs font-bold py-2.5 px-5 rounded-xl cursor-pointer">
+                            Publier
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {news.map((n) => (
+                      <div key={n.id} className="bg-white border rounded-2xl p-4.5 space-y-3 flex flex-col justify-between shadow-xs">
+                        <img src={n.imageUrl} alt={n.title} className="w-full h-40 object-cover rounded-xl" />
+                        <div className="flex justify-between items-start gap-3">
+                          <div>
+                            <span className="text-[9px] font-mono text-stone-500">{n.date}</span>
+                            <h4 className="font-bold text-stone-custom-900 text-sm">{n.title}</h4>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <button onClick={() => { setEditingNews(n); setStatusMessage(null); }} className="p-1.5 rounded-lg border hover:bg-stone-50 text-stone-600 hover:text-emerald-custom-700 cursor-pointer">
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteNews(n.id)} className="p-1.5 rounded-lg border hover:bg-stone-50 text-clay-500 hover:text-clay-700 cursor-pointer">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-stone-custom-800 leading-relaxed">{n.description}</p>
                       </div>
                     ))}
                   </div>
