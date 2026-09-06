@@ -77,8 +77,8 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [recordRecommendations, setRecordRecommendations] = useState("");
   
   // Login credentials states
-  const [email, setEmail] = useState("cepapsycontact@gmail.com");
-  const [password, setPassword] = useState("Admin123");
+    const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isFirstLaunch, setIsFirstLaunch] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
