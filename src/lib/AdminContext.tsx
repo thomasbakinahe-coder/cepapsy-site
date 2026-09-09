@@ -23,6 +23,7 @@ interface AdminContextProps {
   logout: () => Promise<void>;
   registerFirstAdmin: (email: string, password: string) => Promise<void>;
   checkIfNoAdminsExist: () => Promise<boolean>;
+  addNewAdmin: (email: string, password: string) => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextProps | undefined>(undefined);
@@ -118,6 +119,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+
+  const addNewAdmin = async (email: string, password: string) => {
+    try {
+      const { createUserWithEmailAndPassword } = await import("firebase/auth");
+      const { getAuth } = await import("firebase/auth");
+      const { initializeApp, deleteApp } = await import("firebase/app");
+
+      // Create a secondary, temporary Firebase app instance to avoid
+      // logging out the current admin when creating a new account
+      const currentApp = auth.app;
+      const secondaryApp = initializeApp(currentApp.options, "SecondaryAdminCreation-" + Date.now());
+      const secondaryAuth = getAuth(secondaryApp);
+
+      const res = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      await setDoc(doc(db, "admins", res.user.uid), {
+        email: email,
+        role: "admin",
+        createdAt: new Date().toISOString()
+      });
+
+      await signOut(secondaryAuth);
+      await deleteApp(secondaryApp);
+    } catch (err: any) {
+      let friendlyMessage = err.message || "Impossible de créer ce compte administrateur.";
+      if (err.code === "auth/email-already-in-use") {
+        friendlyMessage = "Cette adresse email est déjà utilisée.";
+      } else if (err.code === "auth/weak-password") {
+        friendlyMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+      }
+      throw new Error(friendlyMessage);
+    }
+  };
+
   const registerFirstAdmin = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -178,7 +212,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return (
+   return (
     <AdminContext.Provider value={{ 
       user, 
       isAdmin, 
@@ -187,7 +221,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       login, 
       logout, 
       registerFirstAdmin,
-      checkIfNoAdminsExist 
+      checkIfNoAdminsExist,
+      addNewAdmin
     }}>
       {children}
     </AdminContext.Provider>

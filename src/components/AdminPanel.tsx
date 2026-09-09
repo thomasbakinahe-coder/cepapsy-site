@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 export default function AdminPanel({ onClose }: { onClose: () => void }) {
-  const { user, isAdmin, loading: authLoading, error: authError, login, logout, registerFirstAdmin, checkIfNoAdminsExist } = useAdmin();
+  const { user, isAdmin, loading: authLoading, error: authError, login, logout, registerFirstAdmin, checkIfNoAdminsExist, addNewAdmin } = useAdmin();
   const { 
     cepapsyInfo, 
     services, 
@@ -65,6 +65,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<"general" | "services" | "faq" | "testimonials" | "appointments" | "volunteers" | "clinical_records" | "news">("general");
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
   const [newNews, setNewNews] = useState<Partial<NewsItem>>({ id: "", title: "", description: "", imageUrl: "", date: new Date().toISOString().split("T")[0] });
+    const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [adminFormLoading, setAdminFormLoading] = useState(false);
 
   // Clinical records states
   const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
@@ -372,6 +375,24 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       setFormLoading(false);
     }
   };
+
+
+    const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminFormLoading(true);
+    setStatusMessage(null);
+    try {
+      await addNewAdmin(newAdminEmail, newAdminPassword);
+      setStatusMessage({ type: "success", text: `Nouveau compte administrateur créé pour ${newAdminEmail}. Cette personne peut maintenant se connecter avec cet email et ce mot de passe.` });
+      setNewAdminEmail("");
+      setNewAdminPassword("");
+    } catch (err: any) {
+      setStatusMessage({ type: "error", text: err.message });
+    } finally {
+      setAdminFormLoading(false);
+    }
+  };
+
 
   const handleDeleteNews = async (id: string) => {
     if (!confirm("Supprimer cette actualité ?")) return;
@@ -792,7 +813,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                 </div>
               )}
 
-              {/* 1. GENERAL INFORMATION FORM */}
+                           {/* 1. GENERAL INFORMATION FORM */}
               {activeTab === "general" && (
                 <div className="space-y-6">
                   <div className="border-b pb-4">
@@ -935,6 +956,47 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                       </button>
                     </div>
                   </form>
+
+                  <div className="border-t pt-6 mt-6">
+                    <h3 className="font-extrabold text-stone-custom-900 text-lg sm:text-xl">
+                      Gestion des Comptes Administrateurs
+                    </h3>
+                    <p className="text-xs text-stone-custom-800 mt-1 mb-4">
+                      Créez un accès séparé pour une autre personne (collaborateur, IT, communication). Chaque personne aura son propre email et mot de passe.
+                    </p>
+                    <form onSubmit={handleAddAdmin} className="flex flex-col sm:flex-row gap-3 items-end">
+                      <div className="flex-1 space-y-1.5 w-full">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-stone-custom-800 block">Email du nouveau compte</label>
+                        <input
+                          type="email"
+                          required
+                          value={newAdminEmail}
+                          onChange={(e) => setNewAdminEmail(e.target.value)}
+                          placeholder="collaborateur@exemple.com"
+                          className="w-full bg-white border border-stone-custom-200 rounded-xl p-3 text-xs text-stone-custom-900 outline-none"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1.5 w-full">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-stone-custom-800 block">Mot de passe (min. 6 caractères)</label>
+                        <input
+                          type="text"
+                          required
+                          minLength={6}
+                          value={newAdminPassword}
+                          onChange={(e) => setNewAdminPassword(e.target.value)}
+                          placeholder="Mot de passe"
+                          className="w-full bg-white border border-stone-custom-200 rounded-xl p-3 text-xs text-stone-custom-900 outline-none"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={adminFormLoading}
+                        className="bg-stone-custom-800 hover:bg-stone-custom-900 text-white font-bold px-5 py-3 rounded-xl shadow-xs text-xs uppercase tracking-wider cursor-pointer whitespace-nowrap"
+                      >
+                        {adminFormLoading ? "Création..." : "Créer ce compte"}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               )}
 
