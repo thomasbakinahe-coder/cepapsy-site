@@ -62,12 +62,16 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
   } = useData();
 
   // Navigation tabs in backend
-  const [activeTab, setActiveTab] = useState<"general" | "services" | "faq" | "testimonials" | "appointments" | "volunteers" | "clinical_records" | "news">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "services" | "faq" | "testimonials" | "appointments" | "volunteers" | "clinical_records" | "news" | "messages">("general");
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
   const [newNews, setNewNews] = useState<Partial<NewsItem>>({ id: "", title: "", description: "", imageUrl: "", date: new Date().toISOString().split("T")[0] });
     const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [adminFormLoading, setAdminFormLoading] = useState(false);
+  const [allMessages, setAllMessages] = useState<any[]>([]);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replyLoading, setReplyLoading] = useState(false);
 
   // Clinical records states
   const [allClinicalRecords, setAllClinicalRecords] = useState<any[]>([]);
@@ -167,6 +171,18 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
   };
 
+    const fetchAllMessages = async () => {
+    try {
+      const { db, collection, getDocs, query, orderBy } = await import("../lib/firebase");
+      const snapshot = await getDocs(query(collection(db, "messages"), orderBy("createdAt", "desc")));
+      const list: any[] = [];
+      snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+      setAllMessages(list);
+    } catch (err) {
+      console.error("Error loading messages:", err);
+    }
+  };
+
   const fetchAllClinicalRecords = async () => {
     try {
       const { db, collection, getDocs, query, orderBy } = await import("../lib/firebase");
@@ -181,9 +197,12 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
   };
 
-  useEffect(() => {
+    useEffect(() => {
     if (activeTab === "clinical_records" && user && isAdmin) {
       fetchAllClinicalRecords();
+    }
+    if (activeTab === "messages" && user && isAdmin) {
+      fetchAllMessages();
     }
   }, [activeTab, user, isAdmin]);
 
@@ -393,6 +412,38 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const handleReplyMessage = async (id: string) => {
+    if (!replyText.trim()) return;
+    setReplyLoading(true);
+    try {
+      const { db, doc, updateDoc } = await import("../lib/firebase");
+      await updateDoc(doc(db, "messages", id), {
+        adminReply: replyText.trim(),
+        status: "replied",
+        repliedAt: new Date().toISOString()
+      });
+      setReplyText("");
+      setReplyingToId(null);
+      setStatusMessage({ type: "success", text: "Réponse envoyée au patient." });
+      fetchAllMessages();
+    } catch (err: any) {
+      setStatusMessage({ type: "error", text: "Erreur: " + err.message });
+    } finally {
+      setReplyLoading(false);
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!confirm("Supprimer ce message ?")) return;
+    try {
+      const { db, doc, deleteDoc } = await import("../lib/firebase");
+      await deleteDoc(doc(db, "messages", id));
+      setStatusMessage({ type: "success", text: "Message supprimé." });
+      fetchAllMessages();
+    } catch (err: any) {
+      setStatusMessage({ type: "error", text: "Erreur: " + err.message });
+    }
+  };
 
   const handleDeleteNews = async (id: string) => {
     if (!confirm("Supprimer cette actualité ?")) return;
@@ -748,6 +799,23 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                     {volunteers.filter(v => v.status === "new").length > 0 && (
                       <span className="bg-clay-500 text-stone-custom-50 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                         {volunteers.filter(v => v.status === "new").length}
+                      </span>
+                    )}
+                  </button>
+
+                                    <button 
+                    onClick={() => { setActiveTab("messages"); setStatusMessage(null); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
+                      activeTab === "messages" ? "bg-emerald-custom-650 text-white" : "text-stone-custom-850 hover:bg-stone-custom-200"
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Mail className="w-4 h-4" />
+                      Messagerie Patients
+                    </span>
+                    {allMessages.filter(m => m.status === "new").length > 0 && (
+                      <span className="bg-clay-500 text-stone-custom-50 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                        {allMessages.filter(m => m.status === "new").length}
                       </span>
                     )}
                   </button>
@@ -1647,6 +1715,102 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                         <p className="text-xs text-stone-custom-800 leading-relaxed">{n.description}</p>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* MESSAGES / PATIENT COMMUNICATION */}
+              {activeTab === "messages" && (
+                <div className="space-y-6">
+                  <div className="border-b pb-4">
+                    <h3 className="font-extrabold text-stone-custom-900 text-lg sm:text-xl">
+                      Messagerie Patients
+                    </h3>
+                    <p className="text-xs text-stone-custom-800 mt-1">
+                      Consultez et répondez aux messages envoyés par les patients depuis leur Espace Patient.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {allMessages.map((msg) => (
+                      <div key={msg.id} className={`border rounded-2xl p-5 space-y-3 bg-white shadow-xs ${msg.status === "new" ? "border-l-4 border-l-clay-500" : ""}`}>
+                        <div className="flex justify-between items-start gap-4 flex-wrap">
+                          <div>
+                            <span className="text-[9px] font-mono uppercase tracking-wider bg-stone-100 text-stone-500 px-2.5 py-1 rounded-md">
+                              {new Date(msg.createdAt).toLocaleString("fr-FR")}
+                            </span>
+                            <h4 className="font-bold text-stone-custom-900 text-sm mt-2">
+                              {msg.patientName} <span className="text-stone-400 font-normal">({msg.patientEmail})</span>
+                            </h4>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {msg.status === "new" ? (
+                              <span className="bg-clay-100 text-clay-700 border border-clay-200 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">Non répondu</span>
+                            ) : (
+                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">Répondu</span>
+                            )}
+                            <button onClick={() => handleDeleteMessage(msg.id)} className="p-1.5 rounded-lg border hover:bg-stone-50 text-clay-500 hover:text-clay-700 cursor-pointer">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-stone-custom-850 bg-stone-50 p-3 rounded-xl border border-dashed leading-relaxed">
+                          {msg.content}
+                        </p>
+
+                        {msg.adminReply && (
+                          <div className="bg-emerald-50/40 p-3 rounded-xl border border-emerald-100">
+                            <span className="text-[10px] font-bold uppercase text-emerald-700 block mb-1">Votre réponse :</span>
+                            <p className="text-xs text-emerald-800 leading-relaxed">{msg.adminReply}</p>
+                          </div>
+                        )}
+
+                        {replyingToId === msg.id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              rows={3}
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Écrivez votre réponse au patient..."
+                              className="w-full bg-white border border-stone-custom-200 rounded-xl p-3 text-xs outline-none"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleReplyMessage(msg.id)}
+                                disabled={replyLoading}
+                                className="bg-[#046399] hover:bg-[#034b75] text-white font-bold text-xs py-2 px-4 rounded-xl cursor-pointer"
+                              >
+                                {replyLoading ? "Envoi..." : "Envoyer la réponse"}
+                              </button>
+                              <button
+                                onClick={() => { setReplyingToId(null); setReplyText(""); }}
+                                className="bg-stone-custom-200 text-stone-custom-900 font-bold text-xs py-2 px-4 rounded-xl cursor-pointer"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => { setReplyingToId(msg.id); setReplyText(msg.adminReply || ""); }}
+                            className="bg-stone-custom-800 hover:bg-stone-custom-900 text-white font-bold text-xs py-2 px-4 rounded-xl cursor-pointer"
+                          >
+                            {msg.adminReply ? "Modifier la réponse" : "Répondre"}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+
+                    {allMessages.length === 0 && (
+                      <div className="text-center py-12 bg-white rounded-3xl border border-stone-200">
+                        <Mail className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+                        <h4 className="font-bold text-stone-custom-900 text-sm">Aucun message pour le moment</h4>
+                        <p className="text-xs text-stone-custom-800 mt-1 max-w-xs mx-auto leading-relaxed">
+                          Les messages envoyés par les patients depuis leur Espace Patient apparaîtront ici.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
