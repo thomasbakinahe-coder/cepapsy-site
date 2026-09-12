@@ -151,7 +151,7 @@ export default function PatientPortal({ onClose }: { onClose: () => void }) {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<"appointments" | "resources" | "history">("appointments");
+  const [activeTab, setActiveTab] = useState<"appointments" | "resources" | "history" | "messages">("appointments");
   
   // Auth states
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -163,6 +163,9 @@ export default function PatientPortal({ onClose }: { onClose: () => void }) {
   // Patient content data
   const [myAppointments, setMyAppointments] = useState<FirestoreBooking[]>([]);
   const [myHistory, setMyHistory] = useState<PatientRecord[]>([]);
+  const [myMessages, setMyMessages] = useState<any[]>([]);
+  const [newMessageText, setNewMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
 
   // Track Auth state changes
@@ -209,10 +212,40 @@ export default function PatientPortal({ onClose }: { onClose: () => void }) {
       historyList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setMyHistory(historyList);
 
+      // 3. Fetch messages for this patient
+      const msgRef = collection(db, "messages");
+      const msgQuery = query(msgRef, where("patientEmail", "==", patientEmail.trim().toLowerCase()));
+      const msgSnapshot = await getDocs(msgQuery);
+      const msgList: any[] = [];
+      msgSnapshot.forEach((doc) => msgList.push({ id: doc.id, ...doc.data() }));
+      msgList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setMyMessages(msgList);
+
     } catch (err: any) {
       console.error("Error fetching patient medical file data:", err);
     } finally {
       setDataLoading(false);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessageText.trim() || !currentUser) return;
+    setSendingMessage(true);
+    try {
+      await addDoc(collection(db, "messages"), {
+        patientEmail: currentUser.email.trim().toLowerCase(),
+        patientName: currentUser.displayName || currentUser.email,
+        content: newMessageText.trim(),
+        status: "new",
+        createdAt: new Date().toISOString()
+      });
+      setNewMessageText("");
+      fetchPatientData(currentUser.email);
+    } catch (err: any) {
+      console.error("Error sending message:", err);
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -609,6 +642,29 @@ export default function PatientPortal({ onClose }: { onClose: () => void }) {
                     </span>
                   )}
                 </button>
+
+                
+                <button
+                  onClick={() => setActiveTab("messages")}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
+                    activeTab === "messages" 
+                      ? "bg-[#046399] text-white shadow-xs" 
+                      : "text-stone-custom-850 hover:bg-stone-custom-100"
+                  }`}
+                  id="tab-btn-messages"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Phone className="w-4 h-4" />
+                    Mes Messages
+                  </span>
+                  {myMessages.length > 0 && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      activeTab === "messages" ? "bg-white/20 text-white" : "bg-stone-200 text-stone-700"
+                    }`}>
+                      {myMessages.length}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Support Notice Card */}
@@ -893,6 +949,78 @@ export default function PatientPortal({ onClose }: { onClose: () => void }) {
                     </div>
                   )}
 
+                  {/* TAB 4: MESSAGES */}
+                  {activeTab === "messages" && (
+                    <div className="space-y-6">
+                      <div className="border-b pb-4">
+                        <h3 className="font-extrabold text-stone-custom-900 text-lg sm:text-xl">
+                          Mes Messages
+                        </h3>
+                        <p className="text-xs text-stone-500 mt-1">
+                          Envoyez un message directement à votre psychologue référent. Vous recevrez sa réponse ici.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleSendMessage} className="bg-stone-custom-50/40 p-4 sm:p-5 border border-stone-custom-200 rounded-2xl space-y-3">
+                        <label className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block">
+                          Nouveau message
+                        </label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={newMessageText}
+                          onChange={(e) => setNewMessageText(e.target.value)}
+                          placeholder="Écrivez votre message ici..."
+                          className="w-full bg-white border border-stone-custom-200 focus:border-[#046399] rounded-xl p-3 text-xs outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={sendingMessage}
+                          className="bg-[#046399] hover:bg-[#034b75] text-white font-bold text-xs py-2.5 px-5 rounded-xl cursor-pointer disabled:bg-stone-300"
+                        >
+                          {sendingMessage ? "Envoi..." : "Envoyer"}
+                        </button>
+                      </form>
+
+                      {myMessages.length === 0 ? (
+                        <div className="text-center py-16 space-y-4 max-w-sm mx-auto">
+                          <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-stone-400">
+                            <Phone className="w-6 h-6" />
+                          </div>
+                          <p className="text-xs text-stone-500 leading-relaxed">
+                            Vous n'avez pas encore envoyé de message.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {myMessages.map((msg) => (
+                            <div key={msg.id} className="border border-stone-custom-200 rounded-2xl p-4 space-y-3 bg-white">
+                              <div className="flex justify-between items-start gap-3">
+                                <span className="text-[10px] text-stone-400 font-mono">
+                                  {new Date(msg.createdAt).toLocaleString("fr-FR")}
+                                </span>
+                                {msg.status === "new" ? (
+                                  <span className="bg-clay-100 text-clay-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">En attente</span>
+                                ) : (
+                                  <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">Répondu</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-stone-custom-850 bg-stone-50 p-3 rounded-xl">
+                                {msg.content}
+                              </p>
+                              {msg.adminReply && (
+                                <div className="bg-[#046399]/5 p-3 rounded-xl border border-[#046399]/15">
+                                  <span className="text-[9px] font-bold uppercase text-[#046399] block mb-1">Réponse du psychologue :</span>
+                                  <p className="text-xs text-stone-custom-900 leading-relaxed">{msg.adminReply}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                 </>
               )}
 
