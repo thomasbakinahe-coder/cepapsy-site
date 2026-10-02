@@ -4,11 +4,11 @@ import {
   //signInWithEmailAndPassword, 
   //signOut, 
   //onAuthStateChanged,
-  User
-} from "firebase/auth";
-import { 
-  getFirestore, 
-  collection, 
+  //User
+} //from "firebase/auth";
+//import { 
+ // getFirestore, 
+  //collection, 
   doc, 
   getDoc, 
   getDocs, 
