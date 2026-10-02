@@ -1,14 +1,14 @@
 import { initializeApp } from "firebase/app";
 import { 
- // getAuth, 
-  //signInWithEmailAndPassword, 
-  //signOut, 
-  //onAuthStateChanged,
-  //User
-} //from "firebase/auth";
-//import { 
- // getFirestore, 
-  //collection, 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User
+} from "firebase/auth";
+import { 
+ getFirestore, 
+  collection, 
   doc, 
   getDoc, 
   getDocs, 

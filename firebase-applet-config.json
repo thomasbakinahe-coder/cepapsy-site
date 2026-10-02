@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0229806444",
-  "appId": "1:592192834685:web:8bc7da54461298312eb514",
-  "apiKey": "AIzaSyDEVD-7qpfBMcXE1cHIwS25w-Rbbv2tVDw",
-  "authDomain": "gen-lang-client-0229806444.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-974f79ea-114b-45fd-9613-c6a32df41da6",
-  "storageBucket": "gen-lang-client-0229806444.firebasestorage.app",
-  "messagingSenderId": "592192834685",
+  "projectId": "cepapsy-officiel",
+  "appId": "1:381488437385:web:498b7269588cdc4a69ce58",
+  "apiKey": "AIzaSyCzZnN9_U8CtCB3E6sjrE2nRJaXnnvqC-g",
+  "authDomain": "cepapsy-officiel.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "cepapsy-officiel.firebasestorage.app",
+  "messagingSenderId": "381488437385",
   "measurementId": ""
 }
